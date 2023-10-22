@@ -1,6 +1,8 @@
 package apiprotocol
 
+import "context"
+
 type ApiProtocol interface {
-	Packet(input []byte) (out []byte, err error)
-	Unpack(input []byte) (out []byte, err error)
+	Packet(ctx context.Context, input []byte) (out []byte, err error)
+	Unpack(ctx context.Context, input []byte) (out []byte, err error)
 }

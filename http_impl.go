@@ -1,7 +1,11 @@
 package apiprotocol
 
 import (
+	"context"
 	"encoding/json"
+
+	"github.com/rs/xid"
+	"github.com/spf13/cast"
 )
 
 /*
@@ -29,12 +33,39 @@ type Head struct {
 	SrcName         string `json:"srcName"`
 }
 
-func NewDefaultRequestProtocol(c Config, requestId string) (protocol DefaultHttpProtocol) {
+type ContextName string
+
+const (
+	Context_Name_RequestId ContextName = "requestId"
+)
+
+// SetRequestID 设置请求ID
+func SetRequestID(ctx context.Context, requestId string) (newCtx context.Context) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	newCtx = context.WithValue(ctx, Context_Name_RequestId, requestId)
+
+	return newCtx
+}
+
+// GetRequestID 获取请求ID
+func GetRequestID(ctx context.Context) (requestId string) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	v := ctx.Value(Context_Name_RequestId)
+	if v == nil {
+		v = xid.New().String()
+	}
+	requestId = cast.ToString(v)
+	return requestId
+}
+
+func NewDefaultRequestProtocol(c Config) (protocol DefaultHttpProtocol) {
 	p := DefaultHttpProtocol{
 		Config: c,
 		Head: Head{
-			RequestId:       requestId,
-			Signature:       "",
 			SignatureMethod: c.SignatureMethod,
 			DstId:           c.DstId,
 			DstName:         c.DstName,
@@ -45,7 +76,7 @@ func NewDefaultRequestProtocol(c Config, requestId string) (protocol DefaultHttp
 	return p
 }
 
-func (p DefaultHttpProtocol) Packet(input []byte) (out []byte, err error) {
+func (p DefaultHttpProtocol) Packet(ctx context.Context, input []byte) (out []byte, err error) {
 	var body interface{}
 	err = json.Unmarshal(input, &body)
 	if err != nil {
@@ -59,6 +90,7 @@ func (p DefaultHttpProtocol) Packet(input []byte) (out []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
+	p.Head.RequestId = GetRequestID(ctx)
 	p.Head.Signature = signature
 	p.Body = body
 	out, err = json.Marshal(p)
@@ -68,7 +100,7 @@ func (p DefaultHttpProtocol) Packet(input []byte) (out []byte, err error) {
 	return out, err
 }
 
-func (p DefaultHttpProtocol) Unpack(input []byte) (out []byte, err error) {
+func (p DefaultHttpProtocol) Unpack(ctx context.Context, input []byte) (out []byte, err error) {
 	pro := DefaultHttpProtocol{}
 	err = json.Unmarshal(input, &pro)
 	if err != nil {
