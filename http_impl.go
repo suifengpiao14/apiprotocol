@@ -2,8 +2,6 @@ package apiprotocol
 
 import (
 	"encoding/json"
-
-	"github.com/rs/xid"
 )
 
 /*
@@ -11,16 +9,17 @@ import (
 |srcName| string||是|否|发起方名称||advertise|| |
 |destId| string||是|否|目标方标识||fc65931207ecce69f43adkoioe80|| |
 |destName| string||是|否|目标方名称||fsstorage|| |
-|transportId | string||是|否|传输标识||154535|| |
+|requestId | string||是|否|传输标识||154535|| |
 |signature|string||是|是||签名,外网访问需开启签名|erefdsf154|
 */
 type DefaultHttpProtocol struct {
-	Head Head        `json:"_head"`
-	Body interface{} `json:"_body"`
+	Config Config      `json:"-"`
+	Head   Head        `json:"_head"`
+	Body   interface{} `json:"_body"`
 }
 
 type Head struct {
-	TransportId     string `json:"transportId"`
+	RequestId       string `json:"requestId"`
 	Signature       string `json:"signature"`
 	SignatureMethod string `json:"signatureMethod"`
 	Type            string `json:"type"`
@@ -30,10 +29,11 @@ type Head struct {
 	SrcName         string `json:"srcName"`
 }
 
-func NewDefaultRequestProtocol(c Config) (protocol DefaultHttpProtocol) {
+func NewDefaultRequestProtocol(c Config, requestId string) (protocol DefaultHttpProtocol) {
 	p := DefaultHttpProtocol{
+		Config: c,
 		Head: Head{
-			TransportId:     xid.New().String(),
+			RequestId:       requestId,
 			Signature:       "",
 			SignatureMethod: c.SignatureMethod,
 			DstId:           c.DstId,
@@ -51,6 +51,15 @@ func (p DefaultHttpProtocol) Packet(input []byte) (out []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
+	signatureFn, err := GetSignature(p.Head.SignatureMethod)
+	if err != nil {
+		return nil, err
+	}
+	signature, err := signatureFn.Signature(p.Config, input)
+	if err != nil {
+		return nil, err
+	}
+	p.Head.Signature = signature
 	p.Body = body
 	out, err = json.Marshal(p)
 	if err != nil {
