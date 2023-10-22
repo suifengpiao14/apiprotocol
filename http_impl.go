@@ -68,7 +68,7 @@ func (p DefaultHttpProtocol) Packet(input []byte) (out []byte, err error) {
 	return out, err
 }
 
-func (p DefaultHttpProtocol) UnPack(input []byte) (out []byte, err error) {
+func (p DefaultHttpProtocol) Unpack(input []byte) (out []byte, err error) {
 	pro := DefaultHttpProtocol{}
 	err = json.Unmarshal(input, &pro)
 	if err != nil {
