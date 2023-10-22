@@ -9,10 +9,8 @@ import (
 )
 
 /*
-|srcId| string||是|否|发起方标识||fc659312b0e023f4107ecce69f43ad80|| |
-|srcName| string||是|否|发起方名称||advertise|| |
-|destId| string||是|否|目标方标识||fc65931207ecce69f43adkoioe80|| |
-|destName| string||是|否|目标方名称||fsstorage|| |
+|clientId| string||是|否|发起方标识||fc659312b0e023f4107ecce69f43ad80|| |
+|clientName| string||是|否|发起方名称||advertise|| |
 |requestId | string||是|否|传输标识||154535|| |
 |signature|string||是|是||签名,外网访问需开启签名|erefdsf154|
 */
@@ -27,8 +25,8 @@ type Head struct {
 	Signature       string `json:"signature"`
 	SignatureMethod string `json:"signatureMethod"`
 	Type            string `json:"type"`
-	SrcId           string `json:"srcId"`
-	SrcName         string `json:"srcName"`
+	ClientId        string `json:"clientId"`
+	ClientName      string `json:"clientName"`
 }
 
 type ContextName string
@@ -65,8 +63,8 @@ func NewDefaultRequestProtocol(c Config) (protocol DefaultHttpProtocol) {
 		Config: c,
 		Head: Head{
 			SignatureMethod: c.SignatureMethod,
-			SrcId:           c.SrcId,
-			SrcName:         c.SrcName,
+			ClientId:        c.ClientId,
+			ClientName:      c.ClientName,
 		},
 	}
 	return p
