@@ -27,8 +27,6 @@ type Head struct {
 	Signature       string `json:"signature"`
 	SignatureMethod string `json:"signatureMethod"`
 	Type            string `json:"type"`
-	DstId           string `json:"dstId"`
-	DstName         string `json:"dstName"`
 	SrcId           string `json:"srcId"`
 	SrcName         string `json:"srcName"`
 }
@@ -67,8 +65,6 @@ func NewDefaultRequestProtocol(c Config) (protocol DefaultHttpProtocol) {
 		Config: c,
 		Head: Head{
 			SignatureMethod: c.SignatureMethod,
-			DstId:           c.DstId,
-			DstName:         c.DstName,
 			SrcId:           c.SrcId,
 			SrcName:         c.SrcName,
 		},
